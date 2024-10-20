@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chunked File Upload</title>
+</head>
+<body>
+    <h1>Chunked File Upload</h1>
+
+    <form id="uploadForm">
+        <input type="file" id="fileInput" required>
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="progressContainer">
+        <progress id="uploadProgress" value="0" max="100"></progress>
+        <span id="progressText">0%</span>
+    </div>
+
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('fileInput');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressText = document.getElementById('progressText');
+
+        const chunkSize = 1024 * 1024; // 每塊大小為 1MB
+
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // 防止表單提交重新載入頁面
+
+            const file = fileInput.files[0];
+			const fileName = file.name
+            if (!file) {
+                alert('請選擇一個檔案');
+                return;
+            }
+			
+            const totalChunks = Math.ceil(file.size / chunkSize);
+            let uploadedChunks = 0;
+
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * chunkSize;
+                const end = Math.min(start + chunkSize, file.size);
+                const chunk = file.slice(start, end); // 切割檔案
+
+                const formData = new FormData();
+				formData.append('fileName', fileName);
+                formData.append('fileChunk', chunk);
+                formData.append('chunkIndex', i);
+                formData.append('totalChunks', totalChunks);
+
+                try {
+                    const response = await fetch('http://localhost:8080/upload', {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to upload chunk ' + i);
+                    }
+
+                    uploadedChunks++;
+                    const progress = Math.round((uploadedChunks / totalChunks) * 100);
+                    uploadProgress.value = progress;
+                    progressText.textContent = progress + '%';
+                } catch (error) {
+                    console.error('Error uploading chunk:', error);
+                    alert('檔案上傳失敗');
+                    return;
+                }
+            }
+
+            alert('檔案上傳成功！');
+        });
+    </script>
+</body>
+</html>

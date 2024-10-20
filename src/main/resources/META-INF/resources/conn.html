@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Sync</title>
+</head>
+<body>
+
+<h1>WebSocket Sync Example</h1>
+<button id="connectBtn">Connect to WebSocket</button>
+<button id="sendMessageBtn">Send Sync Message</button>
+<p id="status">Status: Disconnected</p>
+
+<script>
+	
+    let socket;
+    var roomId = "room123"; // 可以根據需要更改房間ID
+    const statusText = document.getElementById('status');
+    const connectBtn = document.getElementById('connectBtn');
+    const sendMessageBtn = document.getElementById('sendMessageBtn');
+
+    // 當按下連接按鈕時建立 WebSocket 連線
+    connectBtn.addEventListener('click', () => {
+        // 替換成你的 Quarkus WebSocket 服務器的路徑
+        socket = new WebSocket(`ws://localhost:8080/sync/${roomId}`);
+
+        // 當 WebSocket 連接建立時觸發
+        socket.onopen = function(event) {
+            console.log("WebSocket is connected.");
+            statusText.textContent = "Status: Connected";
+        };
+
+        // 當 WebSocket 接收到訊息時觸發
+        socket.onmessage = function(event) {
+            console.log("Received from server:", event.data);
+        };
+
+        // 當 WebSocket 連線關閉時觸發
+        socket.onclose = function(event) {
+            console.log("WebSocket is closed.");
+            statusText.textContent = "Status: Disconnected";
+        };
+
+        // 當 WebSocket 發生錯誤時觸發
+        socket.onerror = function(error) {
+            console.error("WebSocket error observed:", error);
+        };
+    });
+
+    // 當按下發送訊息按鈕時，發送訊息給服務器
+    sendMessageBtn.addEventListener('click', () => {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            const message = { currentTime: new Date().getTime() };
+            socket.send(JSON.stringify(message)); // 發送 JSON 格式的訊息
+            console.log("Sent to server:", message);
+        } else {
+            console.log("WebSocket is not open.");
+        }
+    });
+</script>
+
+</body>
+</html>
