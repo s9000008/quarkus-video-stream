@@ -97,7 +97,7 @@ public class DownloadController {
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error downloading file").build();
         }
     }
-
+    
     // 模擬從資料庫或文件系統獲取文件名稱
     private FileEntity getFileById(int fileId) {
         return FileEntity.findById(fileId);
